@@ -68,3 +68,9 @@ text-viewer/
 - 수집한 미디어 URL / 콘텐츠 자체는 저작권이 있을 수 있으므로 저장소에 포함하지 마세요.
 - 이 뷰어 코드(HTML/CSS/JS)는 자유롭게 사용·수정·배포 가능합니다.
 - CORS 정책으로 일부 이미지가 로드되지 않을 수 있습니다 (카드에 `CORS` 표시).
+
+---
+
+## 크레딧
+
+이 프로젝트의 모든 코드(HTML, CSS, JavaScript)는 [Claude Sonnet](https://claude.ai) (Anthropic)이 작성했습니다.
