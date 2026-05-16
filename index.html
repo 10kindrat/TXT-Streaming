@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>TXT 스트리밍</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+    <div>
+        <p class="title-eyebrow">미디어 뷰어</p>
+        <h1 class="title-main">TXT <em>스트리밍</em></h1>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <label for="folderInput" class="upload-btn">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 10.5V11.5C2 12.05 2.45 12.5 3 12.5H11C11.55 12.5 12 12.05 12 11.5V10.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                <path d="M7 2.5V9M7 2.5L4.5 5M7 2.5L9.5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            폴더 선택
+        </label>
+        <label for="zipInput" class="upload-btn">📦 ZIP 업로드</label>
+        <button class="upload-btn" onclick="openPasteModal()">📋 텍스트 붙여넣기</button>
+    </div>
+    <input type="file" id="folderInput" webkitdirectory directory multiple>
+    <input type="file" id="zipInput" accept=".zip">
+</header>
+
+<!-- ── TAB BAR ── -->
+<div class="tab-bar" id="tab-bar" style="display:none;">
+    <button class="tab-btn active" id="tab-all" onclick="switchTab('all')">◻ 전체</button>
+    <button class="tab-btn fav-tab" id="tab-fav" onclick="switchTab('fav')">
+        ★ 즐겨찾기 <span class="tab-badge" id="fav-count-badge">0</span>
+    </button>
+    <div id="fav-filters" style="display:none;">
+        <button class="fav-filter-btn on" id="filter-img" onclick="toggleFilter('img')">🖼 이미지</button>
+        <button class="fav-filter-btn on" id="filter-vid" onclick="toggleFilter('vid')">▶ 동영상</button>
+    </div>
+</div>
+
+<!-- ── STATS BAR ── -->
+<div class="stats-bar" id="stats-bar" style="display:none;">
+    <span><span class="dot"></span><span id="stat-groups">0개 폴더</span></span>
+    <span id="stat-txts">TXT 0</span>
+    <span id="stat-img">이미지 0</span>
+    <span id="stat-vid">동영상 0</span>
+    <div class="thumb-ctrl">
+        <span style="font-size:10px;color:var(--muted);">썸네일</span>
+        <button class="thumb-btn" onclick="changeThumbSize(-1)">−</button>
+        <span id="thumb-label" style="font-size:10px;min-width:24px;text-align:center;color:var(--muted);">M</span>
+        <button class="thumb-btn" onclick="changeThumbSize(+1)">+</button>
+    </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div id="main-container">
+    <div class="empty-state">
+        <div class="big-icon">◻</div>
+        <p>TXT 파일 또는 폴더를 선택하세요</p>
+        <p class="sub">폴더 구조 그대로 2단계로 표시됩니다</p>
+    </div>
+</div>
+
+<div id="fav-container"></div>
+
+<!-- ── 붙여넣기 모달 ── -->
+<div id="paste-modal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;justify-content:center;align-items:center;backdrop-filter:blur(6px);"
+     onclick="closePasteModal()">
+    <div style="background:#111;border:1px solid #222;border-radius:10px;padding:24px;width:min(520px,92vw);display:flex;flex-direction:column;gap:12px;"
+         onclick="event.stopPropagation()">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-family:'Space Mono',monospace;font-size:11px;color:#7ee8a2;letter-spacing:0.1em;">TXT 내용 붙여넣기</span>
+            <button onclick="closePasteModal()" style="background:none;border:none;color:#555;font-size:18px;cursor:pointer;">✕</button>
+        </div>
+        <p style="font-size:12px;color:#555;margin:0;">PC에서 저장한 .txt 파일 내용을 복사해서 아래에 붙여넣으세요.</p>
+        <textarea id="paste-area"
+            style="background:#0a0a0a;border:1px solid #222;border-radius:6px;color:#ccc;font-family:'Space Mono',monospace;font-size:11px;padding:10px;height:200px;resize:vertical;outline:none;"
+            placeholder="여기에 TXT 내용을 붙여넣으세요..."></textarea>
+        <input id="paste-name"
+            style="background:#0a0a0a;border:1px solid #222;border-radius:6px;color:#ccc;font-family:'Space Mono',monospace;font-size:11px;padding:8px 10px;outline:none;"
+            placeholder="파일 이름 (선택사항, 예: 복귀한친구)">
+        <button onclick="submitPaste()"
+            style="background:#7ee8a2;color:#0a0a0a;border:none;border-radius:6px;padding:10px;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;">
+            불러오기
+        </button>
+    </div>
+</div>
+
+<!-- ── 미디어 모달 ── -->
+<div id="modal" onclick="closeModal()">
+    <div class="modal-outer" onclick="event.stopPropagation()">
+
+        <!-- 공통 상단 HUD (데스크탑: 미디어 위에 절대 배치 / 모바일: 오버레이) -->
+        <div class="modal-top">
+            <button class="modal-nav-btn" onclick="goNext(-1)" title="이전 (Q / ←)">◀</button>
+            <button class="modal-nav-btn" onclick="goNext(+1)" title="다음 (E / →)">▶</button>
+            <span class="modal-counter" id="modal-counter"></span>
+            <button class="modal-fav-btn" id="modal-fav-btn" onclick="toggleModalFav()" title="즐겨찾기 (F)">★</button>
+            <button class="modal-close" onclick="closeModal()" title="닫기 (ESC)">✕</button>
+        </div>
+
+        <!-- 미디어 -->
+        <div class="modal-media-wrap" id="modal-body"></div>
+
+        <!-- 모바일 스와이프 힌트 -->
+        <div class="modal-swipe-hint">← 다음 &nbsp;|&nbsp; 이전 → &nbsp;|&nbsp; ↓ 닫기</div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
